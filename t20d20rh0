@@ -1,0 +1,37 @@
+#!/bin/sh 
+########## Begin MOAB/Slurm header ##########
+#
+# Give job a reasonable name
+#MOAB -N df20r0
+#
+# Request number of nodes and CPU cores per node for job
+#MOAB -l nodes=1:ppn=6
+#
+# Estimated wallclock time for job
+#MOAB -l walltime=2:00:00:00
+#
+# Write standard output and errors in same file
+#MOAB -j oe 
+#
+# Send mail when job begins, aborts and ends
+#
+########### End MOAB header ##########
+
+echo "Working Directory:                    $PWD"
+echo "Running on host                       $HOSTNAME"
+echo "Job id:                               $MOAB_JOBID"
+echo "Job name:                             $MOAB_JOBNAME"
+echo "Number of nodes allocated to job:     $MOAB_NODECOUNT"
+echo "Number of cores allocated to job:     $MOAB_PROCCOUNT"
+
+
+# Setup R Environment
+
+# Change to submission directory of this job
+cd "$MOAB_SUBMITDIR"
+
+# Start program
+/home/kit/econ/ms1993/myopt/R_OpenBlas/bin/R CMD BATCH --no-save --no-restore --slave '--args df1=20 prh1=0 gm1=4' ndim20.R df20r0g4.Rout
+
+
+
