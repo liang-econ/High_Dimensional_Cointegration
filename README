@@ -1,5 +1,11 @@
 This repository provides R codes for the paper "Determination of Vector Error Correction Models in High Dimensions" by C. Liang and M. Schienle.
 
-"ndim20.R" provides the main code of data-generating and model estimation for 20 dimensional case. "t50d20.R" and "t50d200.R" provide the code for 50-dimensional model. "wddim20.R" is for the 20-dimensional model with weakly dependent errors. "liao1.R" contains the code implementing the simulated model used in Liao and Phillips (2014, ET).
+"ndim20.R" provides the main code of data-generating and model estimation for 20 dimensional case. 
+
+"t50d20.R" and "t50d200.R" provide the code for 50-dimensional model. 
+
+"wddim20.R" is for the 20-dimensional model with weakly dependent errors. 
+
+"lp1.R" contains the code implementing the simulated model used in Liao and Phillips (2014, ET).
 
 
