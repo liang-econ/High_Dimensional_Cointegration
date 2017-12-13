@@ -112,14 +112,15 @@ tmldy0<-ldy0%*%mm1
 mdy0<-cmm1(tmdy0)
 mldy0<-cmm1(tmldy0)
 
-hb1<-(mdy0%*%t(mldy0)/nn1)%*%solve(mldy0%*%t(mldy0)/nn1)
+hb1<-(mdy0%*%t(mldy0)/nn1)%*%solve(mldy0%*%t(mldy0)/nn1+log(nn1)/nn1)
+
 mhb1<-matrix(hb1,nr=dm0*dm0,byrow=F)
 wb1<-(apply(abs(mhb1),2,max))^(-gm1)
 
 cy0<-c(mdy0)
 kx1<-t(mldy0)%x%sdm0
 gid1<-rep(1:kk,each=dm0*dm0)
-fit1<-lsgl::fit(kx1,cy0,intercept=F,grouping=gid1,lambda=0.001,alpha=0,groupWeights=wb1)
+fit1<-lsgl::fit(kx1,cy0,intercept=F,grouping=gid1,lambda=0.01,alpha=0,groupWeights=wb1)
 
 bic1<-0
 for (i in 1:length(fit1$beta)){
@@ -155,10 +156,12 @@ mdy0<-cmm1(tmdy0)
 mly1<-cmm1(tmly1)
 
 
-hp1<-(mdy0%*%t(mly1)/nn1+1/nn1)%*%solve(mly1%*%t(mly1)/nn1+1/nn1)
+#hp1<-(mdy0%*%t(mly1)/nn1+1/nn1)%*%solve(mly1%*%t(mly1)/nn1+1/nn1)
+hp1<-(mdy0%*%t(mly1)/nn1)%*%solve(mly1%*%t(mly1)/nn1)
 dhp2<-qr1(t(hp1))
 
-wr1<-abs(diag(dhp2$R))^(-gm1)
+#wr1<-abs(diag(dhp2$R))^(-gm1)
+wr1<-sqrt(rowSums(dhp2$R^2))^(-gm1)
 pmdy0<-t(dhp2$P)%*%mdy0
 qmly1<-t(dhp2$Q)%*%mly1
 ss1<-(dhp2$Q)
@@ -168,7 +171,7 @@ cy0<-c(pmdy0)
 kx1<-t(qmly1)%x%sdm0
 gid1<-rep(1:dm0,each=dm0)
 
-fit1<-lsgl::fit(kx1,cy0,intercept=F,grouping=gid1,lambda=0.001,alpha=0,groupWeights=wr1)
+fit1<-lsgl::fit(kx1,cy0,intercept=F,grouping=gid1,lambda=0.01,alpha=0,groupWeights=wr1)
 
 bic1<-0
 for (i in 1:length(fit1$beta)){
@@ -181,8 +184,9 @@ return(list(fit1,bic1,ss1))
 }
 
 
-sn1<-c(500,1000,1500,2000,2500,3000)
-sn1<-sn1[1:4]
+#sn1<-c(500,1000,1500,2000,2500,3000)
+
+sn1<-c(400,800,1200,1600)#sn1[1:4]
 np1<-100
 kk<-3
 #df=10, rho=0.0,0.2,0.4,0.6

@@ -1,61 +1,35 @@
-#rm(list=ls(all=T))
+rm(list=ls(all=T))
 library(glmnet)
 library(Matrix)
 library(lsgl)
 library(LDRTools)
 
-set.seed(2017)
 source("qr.R")
 ####################################################
 #kk=3
 
-args<-commandArgs(trailingOnly=T)
-for (i in 1:length(args)){eval(parse(text=args[[i]]))}
+rank0<-1
+dm0<-2
 
-rh1<-prh1*0.1
-
-fn1<-paste("t20df",df1,"rh",prh1,"gm",gm1,".RData",sep="")
-print(fn1)
-
-rank0<-5
-dm0<-20
-m1<-matrix(rnorm(rank0*dm0),dm0)
-m2<-matrix(rnorm(rank0*dm0),dm0)
-
-q1<-qr.Q(qr(m1))
-q2<-qr.Q(qr(m2))
-print(t(q2)%*%q1)
-ld0<-diag(c(2,2,2,1,1,rep(0,15)))
-#ld0<-diag(c(2,2,2,1,1,rep(1,5),rep(0,40)))
-#ld0<-diag(c(2,1,1,1,1,rep(1,20),rep(0,5)))
-
-a1<-ld0%*%q1-q2
-b1<-q2
-#print(eigen(t(a1)%*%a1)$val)
-pi0<-a1%*%t(b1)
+pi0<-matrix(c(-1,1,-0.5,0.5),nr=2)
 pi1<-pi0+diag(dm0)
 print(abs(eigen(pi1)$val))
 
-q1<-a1
-q2<-b1
+bb1<-diag(c(0.4,0.4))
+bb2<-matrix(0,nr=2,nc=2)
+bb3<-diag(c(0.4,0.4))
 
-qa1<-qr.Q(qr(a1))
-qb1<-qr.Q(qr(b1))
+mc1<-cbind(bb3,bb2-bb3,bb1-bb2,-(pi1+bb1))*-1
+tmc1<-diag(3*dm0)
+tmc2<-cbind(matrix(0,nr=3*dm0,nc=dm0),tmc1)
+mc2<-rbind(tmc2,mc1)
+abs(eigen(mc2)$val)
 
-
-bb1<-diag(runif(dm0,-0.5,0.5))
-
-tm1<-matrix(0,dm0*2,dm0*2)
-tm1[(dm0+1):(dm0*2),1:dm0]=-bb1
-tm1[1:dm0,(dm0+1):(dm0*2)]=diag(dm0)
-tm1[(dm0+1):(dm0*2),(dm0+1):(dm0*2)]=pi1+bb1
-
-va1<-abs(eigen(tm1)$val)
-sum(round(va1,2)==1.00)
-sum(round(va1,2)<1.00)
 
 dn1<-10
-
+#n1<-1000+dn1
+#nn1<-n1-kk
+gm1<-3
 sdm0<-Matrix(0,dm0,dm0,sparse=T)
 for (i in 1:dm0){sdm0[i,i]=1}
 
@@ -66,20 +40,13 @@ cmm1<-function(x){
   return(x-mm1)
 }
 
-dg1<-function(n1,kk,rh0=0.2,df0=10){
+dg1<-function(n1,kk){
 cov1<-matrix(0,dm0,dm0)
-if (rh0!=0.0){
-for (i in 1:dm0){for (j in 1:dm0) { cov1[i,j]<-rh0**(abs(i-j))}   }
-de1<-eigen(cov1)
-p1<-de1$vectors%*%diag(sqrt(de1$values))
-w1<-p1%*%matrix(rt(dm0*n1,df=df0),dm0,n1)
-rm(cov1,p1)
-}else{w1<-matrix(rt(dm0*n1,df=df0),dm0,n1)}
-
+w1<-diag(sqrt(c(1.25,0.75)))%*%matrix(rnorm(dm0*n1),dm0)
 y1<-w1
 dy1<-w1
-for (i in 3:n1){
-    y1[,i]<-y1[,i]+(pi1+bb1)%*%y1[,i-1]-bb1%*%y1[,i-2]
+for (i in 5:n1){
+    y1[,i]<-y1[,i]+(pi1+bb1)%*%y1[,i-1]-(bb1-bb2)%*%y1[,i-2]-(bb2-bb3)%*%y1[,i-3]-bb3%*%y1[,i-4]
     dy1[,i]<-y1[,i]-y1[,i-1]
 }
 
@@ -95,9 +62,9 @@ return(list(dy0,ly1,ldy0))
 }
 
 
-lag1<-function(){
+lag1<-function(gm1=3){
 nn1<-ncol(dy0)
-mm1<-diag(nn1)-t(ly1)%*%solve(ly1%*%t(ly1))%*%ly1
+mm1<-diag(nn1)-t(ly1)%*%solve(ly1%*%t(ly1)+log(nn1))%*%ly1
 
 tmdy0<-dy0%*%mm1
 tmldy0<-ldy0%*%mm1
@@ -137,9 +104,9 @@ for (j in 1:kk){
 return(dy0)
 }
 ##############################################
-rank1<-function(){
+rank1<-function(gm1=3){
 nn1<-ncol(dy0)
-mm1<-diag(nn1)-t(ldy0)%*%solve(ldy0%*%t(ldy0)+log(nn1))%*%ldy0
+mm1<-diag(nn1)-t(ldy0)%*%solve(ldy0%*%t(ldy0)+1)%*%ldy0
 
 tmdy0<-dy0%*%mm1
 tmly1<-ly1%*%mm1
@@ -148,13 +115,11 @@ mdy0<-cmm1(tmdy0)
 mly1<-cmm1(tmly1)
 
 
-#hp1<-(mdy0%*%t(mly1)/nn1+1/nn1)%*%solve(mly1%*%t(mly1)/nn1+1/nn1)
-hp1<-(mdy0%*%t(mly1)/nn1)%*%solve(mly1%*%t(mly1)/nn1)
+hp1<-(mdy0%*%t(mly1)/nn1+1/nn1)%*%solve(mly1%*%t(mly1)/nn1+1/nn1)
 dhp2<-qr1(t(hp1))
 
 #wr1<-abs(diag(dhp2$R))^(-gm1)
 wr1<-sqrt(rowSums(dhp2$R^2))^(-gm1)
-
 pmdy0<-t(dhp2$P)%*%mdy0
 qmly1<-t(dhp2$Q)%*%mly1
 ss1<-(dhp2$Q)
@@ -176,14 +141,43 @@ return(list(fit1,bic1,ss1))
 #return(fit1)
 }
 
-
-#sn1<-c(500,1000,1500,2000,2500,3000)
-sn1<-c(400,800,1200,1600)
-sn1<-sn1[1:4]
-np1<-100
-kk<-3
+set.seed(2017)
+sn1<-c(100,200,300,400)
+np1<-5000
+kk<-5
 #df=10, rho=0.0,0.2,0.4,0.6
 #df=15, rho=0.0,0.2,0.4,0.6
+
+rk1<-matrix(0,nr=np1,nc=length(sn1))
+pl1<-matrix(0,nr=np1,nc=length(sn1))
+
+
+for (j in 1:length(sn1)){
+for (i in 1:np1){#change here
+print(c(i,j, rnorm(1)))
+l1<-dg1(n1=sn1[j],kk);dy0<-l1[[1]];ly1<-l1[[2]];ldy0<-l1[[3]];nn1<-ncol(dy0)
+rf1<-rank1(gm1=3)
+d1<-30
+l1<-which.min(rf1[[2]][-(1:d1)])+d1
+rk1[i,j]<-length(rf1[[1]]$beta[l1][[1]]@x)/dm0
+
+pf1<-lag1(gm1=4)
+l1<-which.min(pf1[[2]][-(1:d1)])+d1
+#pl1[i,j]<-length(pf1[[1]]$beta[l1][[1]]@x)/(dm0*dm0)
+x1<-pf1[[1]]$beta[l1][[1]]
+mx1<-matrix(x1,nr=dm0*dm0,byrow=F)
+cmx1<-colSums(mx1!=0)
+id1<-max(which(cmx1!=0))
+pl1[i,j]<-id1
+
+print(c(rk1[i,j],pl1[i,j]))
+
+rm(l1,dy0,ly1,ldy0,rf1,pf1,x1,mx1,cmx1)
+}
+save(rk1,pl1,file="liao1g3g4.RData")
+}
+save(rk1,pl1,file="liao1g3g4.RData")
+
 
 
 rk1<-matrix(0,nr=np1,nc=length(sn1))
@@ -193,20 +187,31 @@ pl1<-matrix(0,nr=np1,nc=length(sn1))
 for (j in 1:length(sn1)){
 for (i in 1:np1){#change here
 print(c(i,j, rnorm(1)))
-l1<-dg1(n1=sn1[j],kk,rh0=rh1,df0=df1);dy0<-l1[[1]];ly1<-l1[[2]];ldy0<-l1[[3]];nn1<-ncol(dy0)
-rf1<-rank1()
+l1<-dg1(n1=sn1[j],kk);dy0<-l1[[1]];ly1<-l1[[2]];ldy0<-l1[[3]];nn1<-ncol(dy0)
+rf1<-rank1(gm1=3)
 d1<-30
 l1<-which.min(rf1[[2]][-(1:d1)])+d1
 rk1[i,j]<-length(rf1[[1]]$beta[l1][[1]]@x)/dm0
 
-pf1<-lag1()
+pf1<-lag1(gm1=5)
 l1<-which.min(pf1[[2]][-(1:d1)])+d1
-pl1[i,j]<-length(pf1[[1]]$beta[l1][[1]]@x)/(dm0*dm0)
+#pl1[i,j]<-length(pf1[[1]]$beta[l1][[1]]@x)/(dm0*dm0)
+x1<-pf1[[1]]$beta[l1][[1]]
+mx1<-matrix(x1,nr=dm0*dm0,byrow=F)
+cmx1<-colSums(mx1!=0)
+id1<-max(which(cmx1!=0))
+pl1[i,j]<-id1
 
+print(c(rk1[i,j],pl1[i,j]))
+
+rm(l1,dy0,ly1,ldy0,rf1,pf1,x1,mx1,cmx1)
 }
-save(rk1,pl1,file=fn1);
+save(rk1,pl1,file="liao1g3g5.RData")
 }
-#save(rk1,pl1,file=fn1);
+save(rk1,pl1,file="liao1g3g5.RData")
+
+
+
 
 q()
 
