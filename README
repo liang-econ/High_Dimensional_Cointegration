@@ -6,6 +6,6 @@ This repository provides R codes for the paper "Determination of Vector Error Co
 
 "wddim20.R" is for the 20-dimensional model with weakly dependent errors. 
 
-"lp1.R" contains the code implementing the simulated model used in Liao and Phillips (2014, ET).
+"lp1.R" contains the code implementing the simulated model used in Liao and Phillips (2015, ET).
 
 
