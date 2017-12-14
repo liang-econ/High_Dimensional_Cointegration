@@ -106,7 +106,7 @@ return(dy0)
 ##############################################
 rank1<-function(gm1=3){
 nn1<-ncol(dy0)
-mm1<-diag(nn1)-t(ldy0)%*%solve(ldy0%*%t(ldy0)+1)%*%ldy0
+mm1<-diag(nn1)-t(ldy0)%*%solve(ldy0%*%t(ldy0)+log(nn1))%*%ldy0
 
 tmdy0<-dy0%*%mm1
 tmly1<-ly1%*%mm1
@@ -115,10 +115,9 @@ mdy0<-cmm1(tmdy0)
 mly1<-cmm1(tmly1)
 
 
-hp1<-(mdy0%*%t(mly1)/nn1+1/nn1)%*%solve(mly1%*%t(mly1)/nn1+1/nn1)
+hp1<-(mdy0%*%t(mly1)/nn1)%*%solve(mly1%*%t(mly1)/nn1)
 dhp2<-qr1(t(hp1))
 
-#wr1<-abs(diag(dhp2$R))^(-gm1)
 wr1<-sqrt(rowSums(dhp2$R^2))^(-gm1)
 pmdy0<-t(dhp2$P)%*%mdy0
 qmly1<-t(dhp2$Q)%*%mly1
@@ -209,9 +208,6 @@ rm(l1,dy0,ly1,ldy0,rf1,pf1,x1,mx1,cmx1)
 save(rk1,pl1,file="liao1g3g5.RData")
 }
 save(rk1,pl1,file="liao1g3g5.RData")
-
-
-
 
 q()
 
